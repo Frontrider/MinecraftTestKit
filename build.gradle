@@ -1,0 +1,109 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven { url = "http://files.minecraftforge.net/maven" }
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.0.11"
+    }
+}
+
+plugins {
+    id 'maven-publish'
+}
+
+
+apply plugin: 'net.minecraftforge.gradle.forge'
+
+
+sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+
+archivesBaseName="MinecraftTestKit"
+
+
+
+compileJava {
+    sourceCompatibility = targetCompatibility = '1.8'
+}
+
+minecraft {
+    version = "1.12.2-14.23.4.2705"
+    runDir = "run"
+    mappings = "snapshot_20171003"
+    makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+}
+
+dependencies {
+    compile("org.junit.jupiter:junit-jupiter-api:$junit_version")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:$junit_version")
+    compile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: junit_version
+    compile("org.junit.platform:junit-platform-runner:$junit_platform_version")
+
+    compile group: 'org.mockito', name: 'mockito-all', version: mockito_version
+
+    compile("com.jayway.jsonpath:json-path:$json_path_version")
+    compile group: 'org.apache.commons', name: 'commons-text', version: commons_text_version
+
+}
+
+processResources {
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+                
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+        
+    // copy everything else except the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+jar {
+
+}
+
+test{
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = group
+            artifactId = project.name
+            version = project.version
+
+            from components.java
+
+            pom {
+                name = 'Minecraft test kit'
+                description = 'A Testing framework to do automated testing for minecraft mods'
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'frontrider'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/Frontrider/MinecraftTestKit.git'
+                    url = 'https://github.com/Frontrider/MinecraftTestKit'
+                }
+            }
+        }
+    }
+}
